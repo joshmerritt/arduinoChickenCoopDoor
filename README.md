@@ -2,7 +2,7 @@
 
 ## Overview
 
-Using an arduino, a motor shield, and a cardoor window motor, I created a door that opens and closes automatically based upon preset brightness settings. 
+Using an arduino, a motor shield, and a car door window motor, I created a door that opens and closes automatically based upon a photoresistor's regular readings. 
 
 ## Motivation
 
