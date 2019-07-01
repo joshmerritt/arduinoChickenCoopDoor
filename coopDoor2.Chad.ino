@@ -84,15 +84,7 @@ void readLightLevel() {
 // Checks the light level and door status. If action needed, rechecks light level. 
 // Then opens or closes door if past 3 light level readings exceeded the threshold
 void checkDoor() {
-    Serial.println("Door('closed') function");
-    Serial.println(door("Closed"));
-    Serial.println("Door('open') function");
-    Serial.println(door("Open"));
-    Serial.println("readingsExceed morningLightLevel function");
-    Serial.println(readingsExceed(morningLightLevel));
-    Serial.println("readingsExceed nightLightLevel function");
-    Serial.println(readingsExceed(nightLightLevel));
-    
+    logCurrentReadings();
     if(door("Closed") && readingsExceed(morningLightLevel)) {
         Serial.println("Bright and door not open, recheck");
         readLightLevel();
@@ -106,7 +98,7 @@ void checkDoor() {
                   runCount++;
                   Serial.println(runCount);
                   if(runCount > timeOut) break;
-                }
+              }
               allOff();
               updateLED();
               if(topSwitch == 0) openAttempts = 0;
@@ -121,9 +113,9 @@ void checkDoor() {
             // Alternate direction if door reads open when trying to close
             if(countTopSwitchOpen < 9) {
                 powerMotor("Down");
-              } else {
+            } else {
                 powerMotor("Up");
-              }
+            }
             closeAttempts++;
             //Run motor ntil the door reaches the bottom switch (== 0) or a time out count is exceeded
             while(bottomSwitch == 1) {
@@ -142,9 +134,10 @@ void checkDoor() {
               closeAttempts = 0;
               countTopSwitchOpen = 0;
             }
+        }
         allOff();
-    }
-    checkAttempts();
+      }
+      checkAttempts();
 }
 
 //Checks to see if the door has tried to open or close more than 3 times without being successful
@@ -155,6 +148,18 @@ void checkAttempts() {
      closeAttempts = 0;
      delay(1000000);
   } 
+}
+
+//Log info to serial monitor
+void logCurrentReadings() {
+    Serial.println("Door('closed') function");
+    Serial.println(door("Closed"));
+    Serial.println("Door('open') function");
+    Serial.println(door("Open"));
+    Serial.println("readingsExceed morningLightLevel function");
+    Serial.println(readingsExceed(morningLightLevel));
+    Serial.println("readingsExceed nightLightLevel function");
+    Serial.println(readingsExceed(nightLightLevel));
 }
 
 //Turn off motor
