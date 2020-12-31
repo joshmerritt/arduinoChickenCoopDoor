@@ -1,5 +1,7 @@
 ## Arduino Powered Chicken Coop Door Opener
 
+[![Chicken Coop Door #2 Opening](www.github.com/joshmerritt/ArduinoCoopDoor/image.gif)](www.github.com/joshmerritt/ArduinoCoopDoor/image.gif)
+
 ## Overview
 
 Using an arduino, a motor shield, and a car door window motor, I created a door that opens and closes automatically based upon a photoresistor's realtime readings. 
