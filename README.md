@@ -1,6 +1,6 @@
 ## Arduino Powered Chicken Coop Door Opener
 
-[![Chicken Coop Door #2 Opening](https://github.com/joshmerritt/arduinoChickenCoopDoor/blob/master/Coop%20Door%201.0%20with%20Chicken.JPG)](https://github.com/joshmerritt/arduinoChickenCoopDoor/blob/master/Coop%20Door%201.0%20with%20Chicken.JPG)
+<img src="https://github.com/joshmerritt/arduinoChickenCoopDoor/blob/master/Coop%20Door%201.0%20with%20Chicken.JPG" width="200" height="200" />
 
 ## Overview
 
@@ -33,7 +33,7 @@ Chickens are inherently vulnerable in the dark and I'm not always able to close 
 
 This first started more than 10 years ago, when I made my first automatic coop door opener. I rigged that one using a two-valve hose water timer, two buckets, and a series of pulleys, which worked great until winter time came around. So when we moved to our property and got a new flock of chickens, I knew a 'smart coop' was on the agenda. I did my usual googling and found a fair number of people creating their own DIY solutions and even a small business selling one for <$100. But, I wanted the future potential expansion that the arduino offered, and I thought I could do it cheaper (I was right, sort of). 
 
-[![Proof Of Concept](https://github.com/joshmerritt/arduinoChickenCoopDoor/blob/master/Coop%20Door%20Proof%20of%20Concept%20%2B%20Testing.JPG)](https://github.com/joshmerritt/arduinoChickenCoopDoor/blob/master/Coop%20Door%20Proof%20of%20Concept%20%2B%20Testing.JPG)
+<img src="https://github.com/joshmerritt/arduinoChickenCoopDoor/blob/master/Coop%20Door%20Proof%20of%20Concept%20%2B%20Testing.JPG" width="200" height="200" />
 
 I bought my new arduino and got to work testing out motor control code, photoresistors, and motor shields. After some trial and error, I learned about stall force, and the impact that has on the specifications you need for your motor and motor shield. Essentially, because V is always equal to I * R, there's often a momentary spike when the motor is turned on, leading to potential overloading or overheating of your components. While the stall force issue was a tricky problem for me to solve, the plus side was that I improved/fail-safed basically every other component of the system in the process. 
 
