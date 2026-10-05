@@ -34,6 +34,11 @@ const unsigned long MOTOR_TIMEOUT_MS = 17000;  // stop if the switch isn't reach
 // ignores brief blips of electrical noise from the motor on the switch wires.
 const unsigned long SWITCH_CONFIRM_MS = 50;
 
+// When closing, keep the motor running this long after the bottom switch is
+// reached, so the door settles fully shut. Adjust it in small steps (50-100):
+// too much lets out extra cord, which can start winding onto the spool backwards.
+const unsigned long EXTRA_CLOSE_MS = 200;
+
 // While the motor runs, print its progress to the Serial Monitor this often.
 const unsigned long MOTOR_PRINT_INTERVAL_MS = 250;
 
@@ -130,7 +135,7 @@ int countInARow(int count, bool readingQualifies) {
 
 void openDoor() {
   Serial.println("Opening door");
-  if (runMotorUntilSwitch(MOTOR_UP, TOP_SWITCH_PIN)) {
+  if (runMotorUntilSwitch(MOTOR_UP, TOP_SWITCH_PIN, 0)) {
     Serial.println("Door opened");
     failedOpensInARow = 0;
   } else {
@@ -142,7 +147,7 @@ void openDoor() {
 
 void closeDoor() {
   Serial.println("Closing door");
-  if (runMotorUntilSwitch(closeDirection, BOTTOM_SWITCH_PIN)) {
+  if (runMotorUntilSwitch(closeDirection, BOTTOM_SWITCH_PIN, EXTRA_CLOSE_MS)) {
     Serial.println("Door closed");
     failedClosesInARow = 0;
     closeDirection = MOTOR_DOWN;
@@ -167,9 +172,10 @@ void pauseIfTooManyFailures() {
 
 // ===== MOTOR AND SWITCHES =====
 
-// Runs the motor until the switch has stayed closed for SWITCH_CONFIRM_MS, or
-// gives up after MOTOR_TIMEOUT_MS. Returns true if the door reached the switch.
-bool runMotorUntilSwitch(int direction, int switchPin) {
+// Runs the motor until the switch has stayed closed for SWITCH_CONFIRM_MS, then
+// keeps it running for extraRunMs more. Gives up after MOTOR_TIMEOUT_MS.
+// Returns true if the door reached the switch.
+bool runMotorUntilSwitch(int direction, int switchPin, unsigned long extraRunMs) {
   startMotor(direction);
   unsigned long startMs = millis();
   unsigned long lastPrintMs = startMs;
@@ -186,8 +192,14 @@ bool runMotorUntilSwitch(int direction, int switchPin) {
         closedSinceMs = nowMs;
       }
       if (nowMs - closedSinceMs >= SWITCH_CONFIRM_MS) {
+        if (extraRunMs > 0) {
+          Serial.print("  switch reached, running ");
+          Serial.print(extraRunMs);
+          Serial.println(" ms more");
+          delay(extraRunMs);
+        }
         stopMotor();
-        printMotorStopped("switch reached", nowMs - startMs, blips);
+        printMotorStopped("switch reached", millis() - startMs, blips);
         return true;
       }
     } else if (switchClosed) {

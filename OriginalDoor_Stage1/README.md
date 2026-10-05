@@ -37,6 +37,7 @@ The other settings are in the same block:
 | `MOTOR_POWER` | 50 | Motor speed (0–255) |
 | `MOTOR_TIMEOUT_MS` | 17000 | How long the motor runs before giving up if it doesn't reach a switch (17 seconds) |
 | `SWITCH_CONFIRM_MS` | 50 | How long a limit switch must read closed before the motor stops. Shorter blips of electrical noise are ignored. |
+| `EXTRA_CLOSE_MS` | 200 | When closing, how much longer the motor keeps running after the bottom switch, so the door settles fully shut. Change it in steps of 50–100. Too much lets out extra cord, which can start winding onto the spool backwards. |
 | `MOTOR_PRINT_INTERVAL_MS` | 250 | How often the Serial Monitor shows the motor's progress while it runs |
 | `FAILED_MOVES_BEFORE_PAUSE` | 4 | Failed tries in a row before it pauses |
 | `FAILURE_PAUSE_MS` | 17 minutes | How long it pauses |
@@ -46,7 +47,7 @@ The other settings are in the same block:
 - **Reading the light:** it reads the light sensor every 5 seconds.
 - **Opening and closing:** after 3 bright readings in a row, it waits 5 more seconds and checks the light and the door again. If both still agree, it opens the door. Closing works the same way with dark readings.
 - **Partly open door:** it's opened if it's bright, or closed if it's dark.
-- **Stopping the motor:** the motor runs until the door reaches the top or bottom switch. If the door doesn't get there within 17 seconds, it stops anyway. A switch has to read closed for 50 ms in a row, so a brief burst of electrical noise from the motor can't stop it early.
+- **Stopping the motor:** the motor runs until the door reaches the top or bottom switch. If the door doesn't get there within 17 seconds, it stops anyway. A switch has to read closed for 50 ms in a row, so a brief burst of electrical noise from the motor can't stop it early. When closing, the motor then runs another 200 ms so the door settles fully shut.
 - **Failed close:** if a close fails, the next try runs the motor the opposite way. This frees the door if the cord has wound onto the spool backwards.
 - **Repeated failures:** after 4 failed opens (or closes) in a row, it waits 17 minutes before trying again. Between failed tries there's a break of about 10 seconds, the same as before.
 
@@ -62,7 +63,8 @@ Closing door
   motor running 250 ms | at top: yes | at bottom: no
   motor running 500 ms | at top: no | at bottom: no
   ...
-  motor stopped after 9850 ms (switch reached)
+  switch reached, running 200 ms more
+  motor stopped after 10050 ms (switch reached)
 Door closed
 ```
 
