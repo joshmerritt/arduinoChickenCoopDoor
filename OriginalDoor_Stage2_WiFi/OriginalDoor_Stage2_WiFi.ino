@@ -63,9 +63,15 @@ const int TOP_SWITCH_PIN = 13;
 const int LIGHT_SENSOR_PIN = A0;
 
 // ===== STATE =====
-enum MotorDirection { MOTOR_UP, MOTOR_DOWN };
-enum MoveTrigger { BY_LIGHT_SENSOR, FROM_STATUS_PAGE };
-enum DoorCommand { NO_COMMAND, OPEN_COMMAND, CLOSE_COMMAND };
+// Named numbers rather than enums because older Arduino IDEs can't compile
+// functions that take a type defined in the sketch.
+const int MOTOR_UP = 1;            // motor directions
+const int MOTOR_DOWN = 2;
+const int BY_LIGHT_SENSOR = 1;     // what moved the door
+const int FROM_STATUS_PAGE = 2;
+const int NO_COMMAND = 0;          // buttons pressed on the status page
+const int OPEN_COMMAND = 1;
+const int CLOSE_COMMAND = 2;
 
 int lightReading = 0;
 int brightReadingsInARow = 0;
@@ -77,7 +83,7 @@ int failedClosesInARow = 0;
 
 // When a close fails, the next one runs the motor the other way. That frees
 // the door if the cord has wound onto the spool backwards (so "down" lifts it).
-MotorDirection closeDirection = MOTOR_DOWN;
+int closeDirection = MOTOR_DOWN;
 
 // While paused, the light sensor doesn't move the door.
 bool automationPaused = false;
@@ -85,7 +91,7 @@ unsigned long pauseStartMs = 0;
 unsigned long pauseLengthMs = 0;
 const char* pauseReason = "";
 
-DoorCommand pendingCommand = NO_COMMAND;  // set by the status page's buttons
+int pendingCommand = NO_COMMAND;  // set by the status page's buttons
 
 String lastEvent;  // most recent event, shown on the status page
 unsigned long lastEventMs = 0;
@@ -154,7 +160,7 @@ void moveDoorForLight() {
 
 // ===== DOOR =====
 
-void openDoor(MoveTrigger trigger) {
+void openDoor(int trigger) {
   if (runMotorUntilSwitch(MOTOR_UP, TOP_SWITCH_PIN)) {
     failedOpensInARow = 0;
     reportEvent(trigger == FROM_STATUS_PAGE ? "Door opened from the status page" : "Door opened", false);
@@ -165,7 +171,7 @@ void openDoor(MoveTrigger trigger) {
   afterMoveAttempt();
 }
 
-void closeDoor(MoveTrigger trigger) {
+void closeDoor(int trigger) {
   if (runMotorUntilSwitch(closeDirection, BOTTOM_SWITCH_PIN)) {
     failedClosesInARow = 0;
     closeDirection = MOTOR_DOWN;
@@ -194,7 +200,7 @@ void afterMoveAttempt() {
 
 // Runs an Open or Close that was pressed on the status page.
 void runPendingCommand() {
-  DoorCommand command = pendingCommand;
+  int command = pendingCommand;
   pendingCommand = NO_COMMAND;
   pauseAutomation(MANUAL_PAUSE_MS, "door moved from the status page");
   if (command == OPEN_COMMAND) {
@@ -230,7 +236,7 @@ bool isAutomationPaused() {
 
 // Runs the motor until the switch closes, or gives up after MOTOR_TIMEOUT_MS.
 // Returns true if the door reached the switch.
-bool runMotorUntilSwitch(MotorDirection direction, int switchPin) {
+bool runMotorUntilSwitch(int direction, int switchPin) {
   startMotor(direction);
   unsigned long startMs = millis();
   while (!isSwitchClosed(switchPin)) {
@@ -244,7 +250,7 @@ bool runMotorUntilSwitch(MotorDirection direction, int switchPin) {
   return true;
 }
 
-void startMotor(MotorDirection direction) {
+void startMotor(int direction) {
   digitalWrite(MOTOR_INPUT1_PIN, direction == MOTOR_UP ? HIGH : LOW);
   digitalWrite(MOTOR_INPUT2_PIN, direction == MOTOR_DOWN ? HIGH : LOW);
   analogWrite(MOTOR_SPEED_PIN, MOTOR_POWER);

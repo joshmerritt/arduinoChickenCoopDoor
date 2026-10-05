@@ -41,7 +41,10 @@ const int TOP_SWITCH_PIN = 13;     // reads LOW when the door is fully open
 const int LIGHT_SENSOR_PIN = A0;
 
 // ===== STATE =====
-enum MotorDirection { MOTOR_UP, MOTOR_DOWN };
+// Motor directions. These are plain numbers rather than an enum because older
+// Arduino IDEs can't compile functions that take a type defined in the sketch.
+const int MOTOR_UP = 1;
+const int MOTOR_DOWN = 2;
 
 int lightReading = 0;
 int brightReadingsInARow = 0;
@@ -51,7 +54,7 @@ int failedClosesInARow = 0;
 
 // When a close fails, the next one runs the motor the other way. That frees
 // the door if the cord has wound onto the spool backwards (so "down" lifts it).
-MotorDirection closeDirection = MOTOR_DOWN;
+int closeDirection = MOTOR_DOWN;
 
 void setup() {
   pinMode(MOTOR_PWM_PIN, OUTPUT);
@@ -145,7 +148,7 @@ void afterMoveAttempt() {
 
 // Runs the motor until the switch closes, or gives up after MOTOR_TIMEOUT_MS.
 // Returns true if the door reached the switch.
-bool runMotorUntilSwitch(MotorDirection direction, int switchPin) {
+bool runMotorUntilSwitch(int direction, int switchPin) {
   startMotor(direction);
   unsigned long startMs = millis();
   while (!isSwitchClosed(switchPin)) {
@@ -158,7 +161,7 @@ bool runMotorUntilSwitch(MotorDirection direction, int switchPin) {
   return true;
 }
 
-void startMotor(MotorDirection direction) {
+void startMotor(int direction) {
   digitalWrite(MOTOR_IN1_PIN, direction == MOTOR_UP ? HIGH : LOW);
   digitalWrite(MOTOR_IN2_PIN, direction == MOTOR_DOWN ? HIGH : LOW);
   analogWrite(MOTOR_PWM_PIN, MOTOR_POWER);

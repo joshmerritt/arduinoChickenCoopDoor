@@ -132,7 +132,7 @@ void handleCloseButton() {
 
 // loop() runs the command. The browser goes back to the status page, which
 // finishes loading once the door has stopped moving.
-void queueCommand(DoorCommand command) {
+void queueCommand(int command) {
   if (strlen(SECRET_WEB_PASSWORD) > 0 && !server.authenticate(SECRET_WEB_USERNAME, SECRET_WEB_PASSWORD)) {
     server.requestAuthentication();
     return;
