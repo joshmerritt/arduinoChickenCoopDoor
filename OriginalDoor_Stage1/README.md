@@ -71,4 +71,4 @@ The door does the same things. These are the small differences, all checked in a
 
 ## Next: WiFi (stage 2)
 
-A later step will move this door to an ESP8266 (NodeMCU) board. It adds a status page, Open/Close buttons on your phone, and notifications. The door logic stays the same, so carry over the light levels you tune here.
+A later step will move this door to an ESP8266 (NodeMCU) board. It adds a status page, Open/Close buttons on your phone, and notifications. That version, and a step-by-step upgrade guide, are in [`../OriginalDoor_Stage2_WiFi`](../OriginalDoor_Stage2_WiFi). The door logic stays the same, so carry over the light levels you tune here.

@@ -6,6 +6,17 @@
 
 Using an arduino, a motor shield, and a car door window motor, I created a door that opens and closes automatically based upon a photoresistor's realtime readings. 
 
+## The sketches
+
+| Folder | What it is |
+|---|---|
+| [`OriginalDoor_Stage1`](OriginalDoor_Stage1) | The original door (one light sensor) on the Arduino Uno. This is the version in use. |
+| [`OriginalDoor_Stage2_WiFi`](OriginalDoor_Stage2_WiFi) | The original door moved to an ESP8266 (NodeMCU) with WiFi: a status page, phone buttons and notifications. Not in use yet; see its upgrade guide. |
+| [`NewDoor_TwoSensor`](NewDoor_TwoSensor) | The newer door, which has two light sensors (morning and evening), on an Arduino Uno. |
+| [`OriginalDoor_2020`](OriginalDoor_2020) | The 2020 version of the original door, with status LEDs. Kept for reference. |
+
+Older versions are on the [`history`](https://github.com/joshmerritt/arduinoChickenCoopDoor/tree/history) branch.
+
 ## Motivation
 
 Chickens are inherently vulnerable in the dark and I'm not always able to close the coop door as soon as they're done free-ranging for the day. Additionally, the sun comes up earlier than I always make it out to allow the chickens to free range for the day, so I wanted to let them out earlier to allow for more foraging as well, as they say 'the early bird gets the worm'.

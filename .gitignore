@@ -1,0 +1,2 @@
+# Holds your WiFi password and notification topic; keep it off GitHub.
+arduino_secrets.h

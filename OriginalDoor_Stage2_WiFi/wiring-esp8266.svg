@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 710" width="1080" height="710" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="1080" height="710" fill="#ffffff"/>
+  <text x="540" y="38" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2328">NodeMCU wiring: board face up, USB port at the top (as in your photo)</text>
+
+  <!-- Board -->
+  <rect x="510" y="70" width="60" height="28" rx="3" fill="#b8bec6" stroke="#6e7781"/>
+  <text x="540" y="89" text-anchor="middle" font-size="12" fill="#1f2328">USB</text>
+  <rect x="440" y="90" width="200" height="525" rx="10" fill="#1f2933" stroke="#0d1117" stroke-width="2"/>
+  <text x="540" y="637" text-anchor="middle" font-size="13" fill="#57606a">antenna end: keep it away from metal</text>
+
+  <!-- Left pin column, top to bottom -->
+  <g font-size="13" fill="#8b949e">
+    <circle cx="458" cy="125" r="6" fill="#6e7781"/><text x="472" y="130">3V3</text>
+    <circle cx="458" cy="191" r="6" fill="#6e7781"/><text x="472" y="196">TX</text>
+    <circle cx="458" cy="224" r="6" fill="#6e7781"/><text x="472" y="229">RX</text>
+    <circle cx="458" cy="257" r="6" fill="#6e7781"/><text x="472" y="262">D8</text>
+    <circle cx="458" cy="389" r="6" fill="#6e7781"/><text x="472" y="394">GND</text>
+    <circle cx="458" cy="422" r="6" fill="#6e7781"/><text x="472" y="427">3V3</text>
+    <circle cx="458" cy="455" r="6" fill="#6e7781"/><text x="472" y="460">D4</text>
+    <circle cx="458" cy="488" r="6" fill="#6e7781"/><text x="472" y="493">D3</text>
+    <circle cx="458" cy="587" r="6" fill="#6e7781"/><text x="472" y="592">D0</text>
+  </g>
+  <g font-size="14" font-weight="700" fill="#ffffff">
+    <circle cx="458" cy="158" r="7" fill="#e3b341"/><text x="472" y="163">GND</text>
+    <circle cx="458" cy="290" r="7" fill="#e3b341"/><text x="472" y="295">D7</text>
+    <circle cx="458" cy="323" r="7" fill="#e3b341"/><text x="472" y="328">D6</text>
+    <circle cx="458" cy="356" r="7" fill="#e3b341"/><text x="472" y="361">D5</text>
+    <circle cx="458" cy="521" r="7" fill="#e3b341"/><text x="472" y="526">D2</text>
+    <circle cx="458" cy="554" r="7" fill="#e3b341"/><text x="472" y="559">D1</text>
+  </g>
+
+  <!-- Right pin column, top to bottom -->
+  <g font-size="13" fill="#8b949e" text-anchor="end">
+    <circle cx="622" cy="191" r="6" fill="#6e7781"/><text x="608" y="196">RST</text>
+    <circle cx="622" cy="224" r="6" fill="#6e7781"/><text x="608" y="229">EN</text>
+    <circle cx="622" cy="290" r="6" fill="#6e7781"/><text x="608" y="295">GND</text>
+    <circle cx="622" cy="323" r="6" fill="#6e7781"/><text x="608" y="328">CLK</text>
+    <circle cx="622" cy="356" r="6" fill="#6e7781"/><text x="608" y="361">SD0</text>
+    <circle cx="622" cy="389" r="6" fill="#6e7781"/><text x="608" y="394">CMD</text>
+    <circle cx="622" cy="422" r="6" fill="#6e7781"/><text x="608" y="427">SD1</text>
+    <circle cx="622" cy="455" r="6" fill="#6e7781"/><text x="608" y="460">SD2</text>
+    <circle cx="622" cy="488" r="6" fill="#6e7781"/><text x="608" y="493">SD3</text>
+    <circle cx="622" cy="521" r="6" fill="#6e7781"/><text x="608" y="526">RSV</text>
+    <circle cx="622" cy="554" r="6" fill="#6e7781"/><text x="608" y="559">RSV</text>
+  </g>
+  <g font-size="14" font-weight="700" fill="#ffffff" text-anchor="end">
+    <circle cx="622" cy="125" r="7" fill="#e3b341"/><text x="608" y="130">Vin</text>
+    <circle cx="622" cy="158" r="7" fill="#e3b341"/><text x="608" y="163">GND</text>
+    <circle cx="622" cy="257" r="7" fill="#e3b341"/><text x="608" y="262">3V3</text>
+    <circle cx="622" cy="587" r="7" fill="#e3b341"/><text x="608" y="592">A0</text>
+  </g>
+
+  <!-- Left wires -->
+  <g stroke-width="4" stroke-linecap="round">
+    <line x1="451" y1="158" x2="360" y2="158" stroke="#1f8a4c"/>
+    <line x1="451" y1="290" x2="360" y2="290" stroke="#24292f"/>
+    <line x1="451" y1="323" x2="360" y2="323" stroke="#e0709a"/>
+    <line x1="451" y1="356" x2="360" y2="356" stroke="#24292f"/>
+    <line x1="451" y1="521" x2="360" y2="521" stroke="#24292f"/>
+    <line x1="451" y1="554" x2="360" y2="554" stroke="#24292f"/>
+  </g>
+  <g font-size="15" fill="#1f2328" text-anchor="end">
+    <text x="350" y="163"><tspan font-weight="700">Sensor ground</tspan> · green wire</text>
+    <text x="350" y="181" font-size="13" fill="#57606a">from the blue crimp splice</text>
+    <text x="350" y="295"><tspan font-weight="700">Top switch</tspan> · black wire · was Uno 13</text>
+    <text x="350" y="328"><tspan font-weight="700">Bottom switch</tspan> · pink wire · was Uno 12</text>
+    <text x="350" y="361"><tspan font-weight="700">Driver IN2</tspan> · black wire · was Uno 7</text>
+    <text x="350" y="526"><tspan font-weight="700">Driver IN1</tspan> · black wire · was Uno 6</text>
+    <text x="350" y="559"><tspan font-weight="700">Driver PWM</tspan> · black wire · was Uno 9</text>
+  </g>
+
+  <!-- Right wires -->
+  <g stroke-width="4" stroke-linecap="round" fill="none">
+    <line x1="629" y1="125" x2="740" y2="125" stroke="#e0709a"/>
+    <line x1="629" y1="158" x2="740" y2="158" stroke="#1f8a4c"/>
+    <polyline points="629,257 690,257 690,385" stroke="#cf222e"/>
+    <polyline points="690,475 690,587" stroke="#cf222e"/>
+    <line x1="629" y1="587" x2="740" y2="587" stroke="#24292f"/>
+  </g>
+  <rect x="678" y="385" width="24" height="90" rx="3" fill="#f6f8fa" stroke="#57606a" stroke-width="2"/>
+  <circle cx="690" cy="587" r="5" fill="#cf222e"/>
+  <g font-size="15" fill="#1f2328">
+    <text x="750" y="130"><tspan font-weight="700">Driver 5VO</tspan> · pink wire · was Uno Vin</text>
+    <text x="750" y="108" font-size="13" fill="#b42318">only if it measured 4.5–5.5 V (guide, Part 3)</text>
+    <text x="750" y="163"><tspan font-weight="700">Driver COM</tspan> · green wire</text>
+    <text x="712" y="414"><tspan font-weight="700">33 kΩ resistor</tspan>, soldered onto</text>
+    <text x="712" y="436">the A0 wire and covered in heat-shrink</text>
+    <text x="712" y="458" font-size="13" fill="#57606a">(or three 10 kΩ soldered in a row)</text>
+    <text x="750" y="592"><tspan font-weight="700">Light sensor</tspan> · black wire · was Uno A0</text>
+  </g>
+
+  <!-- Notes -->
+  <text x="540" y="672" text-anchor="middle" font-size="15" font-weight="700" fill="#b42318">Every other pin stays unconnected. The pink 5 V wire goes only into Vin.</text>
+  <text x="540" y="696" text-anchor="middle" font-size="14" fill="#1f2328">Status page shows the door backwards? Swap D6 and D7. Door moves the wrong way? Swap D2 and D5.</text>
+</svg>
