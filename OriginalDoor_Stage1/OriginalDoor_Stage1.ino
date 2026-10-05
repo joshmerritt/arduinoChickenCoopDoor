@@ -9,7 +9,13 @@
  * Same wiring and behavior as coopDoor2024v1.ino, reorganized so the settings
  * are all in one place. To change when the door opens or closes, edit the
  * light levels below and upload.
+ *
+ * Black box: the Uno also keeps a log of its recent restarts and motor runs in
+ * its EEPROM memory, which survives power cuts. It prints the log to the Serial
+ * Monitor every time it starts up, or when you type L and press Send.
  */
+
+#include <EEPROM.h>
 
 // ===== SETTINGS =====
 
@@ -81,6 +87,7 @@ void setup() {
   pinMode(LIGHT_SENSOR_PIN, INPUT_PULLUP);  // the pull-up and photoresistor form a voltage divider
 
   Serial.begin(9600);
+  startBlackBox();
   Serial.print("Coop door starting. Opens at ");
   Serial.print(BRIGHT_ENOUGH_TO_OPEN);
   Serial.print(" or lower, closes at ");
@@ -90,6 +97,7 @@ void setup() {
 
 void loop() {
   delay(READING_INTERVAL_MS);
+  printBlackBoxIfAsked();
   readLightSensor();
 
   // Before moving, wait one more reading and check again, so the door only
@@ -118,6 +126,7 @@ bool shouldClose() {
 // ===== LIGHT SENSOR =====
 
 void readLightSensor() {
+  analogRead(LIGHT_SENSOR_PIN);  // throw away one reading: it can be off right after a supply measurement
   lightReading = analogRead(LIGHT_SENSOR_PIN);
   brightReadingsInARow = countInARow(brightReadingsInARow, lightReading <= BRIGHT_ENOUGH_TO_OPEN);
   darkReadingsInARow = countInARow(darkReadingsInARow, lightReading >= DARK_ENOUGH_TO_CLOSE);
@@ -176,14 +185,18 @@ void pauseIfTooManyFailures() {
 // keeps it running for extraRunMs more. Gives up after MOTOR_TIMEOUT_MS.
 // Returns true if the door reached the switch.
 bool runMotorUntilSwitch(int direction, int switchPin, unsigned long extraRunMs) {
+  logRunStarted(direction, switchPin == BOTTOM_SWITCH_PIN);
   startMotor(direction);
   unsigned long startMs = millis();
   unsigned long lastPrintMs = startMs;
   unsigned long closedSinceMs = 0;
   bool switchClosed = false;
   unsigned long blips = 0;  // times the switch closed briefly and opened again
+  unsigned int lowestSupplyMv = 65535;
 
   while (true) {
+    unsigned int supplyMv = readSupplyMillivolts();
+    if (supplyMv < lowestSupplyMv) lowestSupplyMv = supplyMv;
     unsigned long nowMs = millis();
 
     if (isSwitchClosed(switchPin)) {
@@ -199,7 +212,9 @@ bool runMotorUntilSwitch(int direction, int switchPin, unsigned long extraRunMs)
           delay(extraRunMs);
         }
         stopMotor();
-        printMotorStopped("switch reached", millis() - startMs, blips);
+        unsigned long ranMs = millis() - startMs;
+        printMotorStopped("switch reached", ranMs, blips, lowestSupplyMv);
+        logRunEnded(false, ranMs, lowestSupplyMv, blips);
         return true;
       }
     } else if (switchClosed) {
@@ -209,7 +224,8 @@ bool runMotorUntilSwitch(int direction, int switchPin, unsigned long extraRunMs)
 
     if (nowMs - startMs >= MOTOR_TIMEOUT_MS) {
       stopMotor();
-      printMotorStopped("timed out", nowMs - startMs, blips);
+      printMotorStopped("timed out", nowMs - startMs, blips, lowestSupplyMv);
+      logRunEnded(true, nowMs - startMs, lowestSupplyMv, blips);
       return false;
     }
 
@@ -247,6 +263,21 @@ bool isDoorFullyClosed() {
   return isSwitchClosed(BOTTOM_SWITCH_PIN);
 }
 
+// Measures the Uno's own supply voltage in millivolts, using the chip's built-in
+// 1.1 V reference. It's only roughly accurate (about 10%), but dips show up clearly.
+unsigned int readSupplyMillivolts() {
+  const byte MEASURE_REFERENCE = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  if (ADMUX != MEASURE_REFERENCE) {
+    ADMUX = MEASURE_REFERENCE;
+    delay(2);  // the reference needs a moment to settle after switching
+  }
+  ADCSRA |= _BV(ADSC);
+  while (bit_is_set(ADCSRA, ADSC)) {}
+  unsigned int reading = ADC;
+  if (reading == 0) return 0;
+  return 1125300UL / reading;
+}
+
 // ===== SERIAL MONITOR =====
 
 // One line per reading, for example: "Light 652 | bright 2, dark 0 of 3 | door closed"
@@ -282,13 +313,14 @@ void printMotorRunning(unsigned long elapsedMs, unsigned long blips) {
   Serial.println();
 }
 
-// For example: "  motor stopped after 9850 ms (switch reached)"
-void printMotorStopped(const char* reason, unsigned long elapsedMs, unsigned long blips) {
+// For example: "  motor stopped after 9850 ms (switch reached) | lowest supply 4.12 V"
+void printMotorStopped(const char* reason, unsigned long elapsedMs, unsigned long blips, unsigned int lowestSupplyMv) {
   Serial.print("  motor stopped after ");
   Serial.print(elapsedMs);
   Serial.print(" ms (");
   Serial.print(reason);
-  Serial.print(")");
+  Serial.print(") | lowest supply ");
+  printVolts(lowestSupplyMv);
   printBlips(blips);
   Serial.println();
 }
@@ -298,4 +330,232 @@ void printBlips(unsigned long blips) {
   if (blips == 0) return;
   Serial.print(" | switch blips ignored: ");
   Serial.print(blips);
+}
+
+// Prints millivolts as volts, for example 4123 as "4.12 V".
+void printVolts(unsigned int millivolts) {
+  Serial.print(millivolts / 1000);
+  Serial.print('.');
+  unsigned int hundredths = (millivolts % 1000) / 10;
+  if (hundredths < 10) Serial.print('0');
+  Serial.print(hundredths);
+  Serial.print(" V");
+}
+
+// ===== BLACK BOX LOG =====
+// The last LOG_SLOTS events are kept in EEPROM, oldest overwritten first. Each
+// event takes LOG_RECORD_SIZE bytes:
+//   0-1 sequence number (0xFFFF = empty slot)   2 event type   3 flags
+//   4-5, 6-7, 8-9 three values (meaning depends on the type)   10-11 seconds since restart
+
+const byte LOG_MARKER[4] = {'C', 'D', 'B', '1'};  // bytes 0-3: says the log area is ours
+const int LOG_START = 4;
+const int LOG_RECORD_SIZE = 12;
+const int LOG_SLOTS = (E2END + 1 - LOG_START) / LOG_RECORD_SIZE;
+const unsigned int LOG_EMPTY = 0xFFFF;
+
+// Event types
+const byte LOG_RESTART = 1;      // values: restart number, supply mV
+const byte LOG_RUN_STARTED = 2;  // values: supply mV, light reading
+const byte LOG_RUN_ENDED = 3;    // values: ms the motor ran, lowest supply mV, switch blips
+
+// Flag bits
+const byte FLAG_CLOSING = 1;     // run started: closing the door (otherwise opening)
+const byte FLAG_MOTOR_UP = 2;    // run started: motor ran up (otherwise down)
+const byte FLAG_TIMED_OUT = 4;   // run ended: timed out (otherwise the switch was reached)
+const byte FLAG_AT_TOP = 8;      // top switch read closed
+const byte FLAG_AT_BOTTOM = 16;  // bottom switch read closed
+
+unsigned int restartNumber = 0;
+int logNextSlot = 0;
+unsigned int logNextSeq = 0;
+
+// Called once at startup: prints the log, then records this restart.
+void startBlackBox() {
+  if (!logMarkerPresent()) clearLog();
+
+  int newest = findNewestLogSlot();
+  if (newest >= 0) {
+    logNextSlot = (newest + 1) % LOG_SLOTS;
+    logNextSeq = nextLogSeq(logSeqAt(newest));
+    restartNumber = lastRestartNumber(newest);
+  }
+  printBlackBox();
+
+  restartNumber++;
+  writeLogEvent(LOG_RESTART, 0, restartNumber, readSupplyMillivolts(), 0);
+}
+
+void printBlackBoxIfAsked() {
+  while (Serial.available() > 0) {
+    char c = Serial.read();
+    if (c == 'L' || c == 'l') printBlackBox();
+  }
+}
+
+void logRunStarted(int direction, bool closing) {
+  byte flags = switchFlags();
+  if (closing) flags |= FLAG_CLOSING;
+  if (direction == MOTOR_UP) flags |= FLAG_MOTOR_UP;
+  writeLogEvent(LOG_RUN_STARTED, flags, readSupplyMillivolts(), lightReading, 0);
+}
+
+void logRunEnded(bool timedOut, unsigned long ranMs, unsigned int lowestSupplyMv, unsigned long blips) {
+  byte flags = switchFlags();
+  if (timedOut) flags |= FLAG_TIMED_OUT;
+  writeLogEvent(LOG_RUN_ENDED, flags, capAt65535(ranMs), lowestSupplyMv, capAt65535(blips));
+}
+
+byte switchFlags() {
+  byte flags = 0;
+  if (isDoorFullyOpen()) flags |= FLAG_AT_TOP;
+  if (isDoorFullyClosed()) flags |= FLAG_AT_BOTTOM;
+  return flags;
+}
+
+unsigned int capAt65535(unsigned long value) {
+  return value > 65535UL ? 65535 : value;
+}
+
+void writeLogEvent(byte type, byte flags, unsigned int a, unsigned int b, unsigned int c) {
+  int address = LOG_START + logNextSlot * LOG_RECORD_SIZE;
+  // Mark the slot empty first, so a power cut mid-write can't leave a half-written event.
+  writeLogWord(address, LOG_EMPTY);
+  writeLogByte(address + 2, type);
+  writeLogByte(address + 3, flags);
+  writeLogWord(address + 4, a);
+  writeLogWord(address + 6, b);
+  writeLogWord(address + 8, c);
+  writeLogWord(address + 10, capAt65535(millis() / 1000));
+  writeLogWord(address, logNextSeq);
+
+  logNextSlot = (logNextSlot + 1) % LOG_SLOTS;
+  logNextSeq = nextLogSeq(logNextSeq);
+}
+
+void printBlackBox() {
+  int newest = findNewestLogSlot();
+  int count = countLogEvents(newest);
+  Serial.println();
+  Serial.print(F("=== Black box: last "));
+  Serial.print(count);
+  Serial.println(F(" events, oldest first ==="));
+  for (int i = count - 1; i >= 0; i--) {
+    printLogEvent((newest - i + LOG_SLOTS) % LOG_SLOTS);
+  }
+  Serial.println(F("=== End of black box ==="));
+  Serial.println();
+}
+
+void printLogEvent(int slot) {
+  int address = LOG_START + slot * LOG_RECORD_SIZE;
+  byte type = EEPROM.read(address + 2);
+  byte flags = EEPROM.read(address + 3);
+  unsigned int a = readLogWord(address + 4);
+  unsigned int b = readLogWord(address + 6);
+  unsigned int c = readLogWord(address + 8);
+  unsigned int seconds = readLogWord(address + 10);
+
+  if (type == LOG_RESTART) {
+    Serial.print(F("RESTART #"));
+    Serial.print(a);
+    Serial.print(F(" | supply "));
+    printVolts(b);
+    Serial.println();
+    return;
+  }
+
+  Serial.print(F("  "));
+  Serial.print(seconds);
+  Serial.print(F(" s after restart: "));
+  if (type == LOG_RUN_STARTED) {
+    Serial.print((flags & FLAG_CLOSING) ? F("CLOSE started, motor ") : F("OPEN started, motor "));
+    Serial.print((flags & FLAG_MOTOR_UP) ? F("up") : F("down"));
+    Serial.print(F(" | supply "));
+    printVolts(a);
+    Serial.print(F(" | light "));
+    Serial.print(b);
+  } else if (type == LOG_RUN_ENDED) {
+    Serial.print(F("stopped after "));
+    Serial.print(a);
+    Serial.print((flags & FLAG_TIMED_OUT) ? F(" ms (timed out)") : F(" ms (switch reached)"));
+    Serial.print(F(" | lowest supply "));
+    printVolts(b);
+    Serial.print(F(" | switch blips ignored: "));
+    Serial.print(c);
+  } else {
+    Serial.print(F("unknown event"));
+  }
+  Serial.print((flags & FLAG_AT_TOP) ? F(" | at top: yes") : F(" | at top: no"));
+  Serial.println((flags & FLAG_AT_BOTTOM) ? F(" | at bottom: yes") : F(" | at bottom: no"));
+}
+
+// The newest event is the one whose next slot doesn't continue the sequence.
+// Returns -1 if the log is empty.
+int findNewestLogSlot() {
+  for (int slot = 0; slot < LOG_SLOTS; slot++) {
+    unsigned int seq = logSeqAt(slot);
+    if (seq == LOG_EMPTY) continue;
+    if (logSeqAt((slot + 1) % LOG_SLOTS) != nextLogSeq(seq)) return slot;
+  }
+  return -1;
+}
+
+// Counts the unbroken run of events leading up to the newest one.
+int countLogEvents(int newest) {
+  if (newest < 0) return 0;
+  int count = 1;
+  int slot = newest;
+  while (count < LOG_SLOTS) {
+    int previous = (slot + LOG_SLOTS - 1) % LOG_SLOTS;
+    unsigned int previousSeq = logSeqAt(previous);
+    if (previousSeq == LOG_EMPTY || nextLogSeq(previousSeq) != logSeqAt(slot)) break;
+    slot = previous;
+    count++;
+  }
+  return count;
+}
+
+// The restart number of the most recent restart in the log (0 if none).
+unsigned int lastRestartNumber(int newest) {
+  int count = countLogEvents(newest);
+  for (int i = 0; i < count; i++) {
+    int address = LOG_START + ((newest - i + LOG_SLOTS) % LOG_SLOTS) * LOG_RECORD_SIZE;
+    if (EEPROM.read(address + 2) == LOG_RESTART) return readLogWord(address + 4);
+  }
+  return 0;
+}
+
+unsigned int nextLogSeq(unsigned int seq) {
+  return seq >= 0xFFFE ? 0 : seq + 1;  // skips 0xFFFF, which means "empty"
+}
+
+unsigned int logSeqAt(int slot) {
+  return readLogWord(LOG_START + slot * LOG_RECORD_SIZE);
+}
+
+bool logMarkerPresent() {
+  for (int i = 0; i < 4; i++) {
+    if (EEPROM.read(i) != LOG_MARKER[i]) return false;
+  }
+  return true;
+}
+
+void clearLog() {
+  for (int address = LOG_START; address <= E2END; address++) writeLogByte(address, 0xFF);
+  for (int i = 0; i < 4; i++) writeLogByte(i, LOG_MARKER[i]);
+}
+
+unsigned int readLogWord(int address) {
+  return EEPROM.read(address) | ((unsigned int)EEPROM.read(address + 1) << 8);
+}
+
+void writeLogWord(int address, unsigned int value) {
+  writeLogByte(address, value & 0xFF);
+  writeLogByte(address + 1, value >> 8);
+}
+
+// Only writes bytes that change, to spare the EEPROM (each byte lasts ~100,000 writes).
+void writeLogByte(int address, byte value) {
+  if (EEPROM.read(address) != value) EEPROM.write(address, value);
 }

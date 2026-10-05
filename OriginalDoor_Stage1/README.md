@@ -70,6 +70,39 @@ Door closed
 
 If a run shows **switch blips ignored**, electrical noise from the motor is reaching the switch wires. It's harmless now, but it's worth knowing about. If the line **Coop door starting** shows up right after the motor starts, the Uno is restarting when the motor turns on. That points to a power problem rather than the code.
 
+## Black box (troubleshooting)
+
+The Uno keeps a log of its last 85 events in its EEPROM memory, which survives power cuts:
+- **Every restart:** a restart number, plus the Uno's supply voltage.
+- **Every motor run start:** open or close, the motor direction, the supply voltage, the light reading, and which switches read closed.
+- **Every motor run end:** why it stopped (switch reached or timed out) and how long it ran. It also records the lowest supply voltage during the run, the switch blips it ignored, and which switches read closed.
+
+**To read it:**
+1. Unplug the driver's power.
+2. Plug the Uno into the laptop.
+3. Open the Serial Monitor at **9600 baud**.
+
+The Uno restarts and prints the log first. That can take about 10 seconds. To print it again later, type **L** and press **Send**.
+
+```text
+=== Black box: last 3 events, oldest first ===
+RESTART #1 | supply 4.24 V
+  310 s after restart: CLOSE started, motor down | supply 4.24 V | light 883 | at top: yes | at bottom: no
+  320 s after restart: stopped after 10150 ms (switch reached) | lowest supply 4.24 V | switch blips ignored: 0 | at top: no | at bottom: yes
+=== End of black box ===
+```
+
+What the patterns mean:
+
+| You see | What it means |
+|---|---|
+| `stopped after` about 10000 ms `(switch reached)`, then `at bottom: yes` | A normal close. |
+| `CLOSE started` followed straight away by `RESTART` | The Uno restarted when the motor started. That's a power problem. |
+| `stopped after` a few hundred ms `(switch reached)` with `at bottom: no` | The bottom switch read closed while the motor ran, even though the door wasn't down. That's a wiring or switch problem. |
+| `lowest supply` well below the normal reading | The motor's start pulls the Uno's power down. |
+
+The supply readings are approximate (about ±10%). Expect about 4.2 V when the Uno is powered from the driver through Vin, or about 5 V on USB.
+
 ## Wiring (unchanged)
 
 | Uno pin | Connected to |
