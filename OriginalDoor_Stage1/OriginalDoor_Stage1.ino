@@ -21,11 +21,21 @@
 const int BRIGHT_ENOUGH_TO_OPEN = 700;  // open when readings are at or below this
 const int DARK_ENOUGH_TO_CLOSE = 880;   // close when readings are at or above this
 
-const int READINGS_IN_A_ROW = 4;                 // readings that must agree before the door moves
+// The light must be past a level for this many readings in a row. Then the
+// door waits one more reading and checks the light and door again before it
+// starts the motor.
+const int READINGS_IN_A_ROW = 3;
 const unsigned long READING_INTERVAL_MS = 5000;  // time between readings (5 seconds)
 
 const int MOTOR_POWER = 50;                    // motor speed, 0-255
 const unsigned long MOTOR_TIMEOUT_MS = 17000;  // stop if the switch isn't reached in 17 seconds
+
+// A limit switch must read closed for this long before the motor stops. This
+// ignores brief blips of electrical noise from the motor on the switch wires.
+const unsigned long SWITCH_CONFIRM_MS = 50;
+
+// While the motor runs, print its progress to the Serial Monitor this often.
+const unsigned long MOTOR_PRINT_INTERVAL_MS = 250;
 
 // After this many failed opens (or closes) in a row, wait before trying again
 // so the motor doesn't burn out.
@@ -77,11 +87,27 @@ void loop() {
   delay(READING_INTERVAL_MS);
   readLightSensor();
 
-  if (brightReadingsInARow >= READINGS_IN_A_ROW && !isDoorFullyOpen()) {
-    openDoor();
-  } else if (darkReadingsInARow >= READINGS_IN_A_ROW && !isDoorFullyClosed()) {
-    closeDoor();
+  // Before moving, wait one more reading and check again, so the door only
+  // moves if the light and door position still agree.
+  if (shouldOpen()) {
+    Serial.println("Bright and the door isn't open. Checking again before opening.");
+    delay(READING_INTERVAL_MS);
+    readLightSensor();
+    if (shouldOpen()) openDoor();
+  } else if (shouldClose()) {
+    Serial.println("Dark and the door isn't closed. Checking again before closing.");
+    delay(READING_INTERVAL_MS);
+    readLightSensor();
+    if (shouldClose()) closeDoor();
   }
+}
+
+bool shouldOpen() {
+  return brightReadingsInARow >= READINGS_IN_A_ROW && !isDoorFullyOpen();
+}
+
+bool shouldClose() {
+  return darkReadingsInARow >= READINGS_IN_A_ROW && !isDoorFullyClosed();
 }
 
 // ===== LIGHT SENSOR =====
@@ -111,7 +137,7 @@ void openDoor() {
     Serial.println("Door didn't open: top switch not reached in time");
     failedOpensInARow++;
   }
-  afterMoveAttempt();
+  pauseIfTooManyFailures();
 }
 
 void closeDoor() {
@@ -125,46 +151,68 @@ void closeDoor() {
     failedClosesInARow++;
     closeDirection = (closeDirection == MOTOR_DOWN) ? MOTOR_UP : MOTOR_DOWN;
   }
-  afterMoveAttempt();
+  pauseIfTooManyFailures();
 }
 
-void afterMoveAttempt() {
-  // Count fresh readings before the next move, so a failed move isn't retried
-  // until READINGS_IN_A_ROW new readings agree.
-  brightReadingsInARow = 0;
-  darkReadingsInARow = 0;
+void pauseIfTooManyFailures() {
+  if (failedOpensInARow < FAILED_MOVES_BEFORE_PAUSE && failedClosesInARow < FAILED_MOVES_BEFORE_PAUSE) return;
 
-  if (failedOpensInARow >= FAILED_MOVES_BEFORE_PAUSE || failedClosesInARow >= FAILED_MOVES_BEFORE_PAUSE) {
-    Serial.print("Too many failed moves in a row. Pausing for ");
-    Serial.print(FAILURE_PAUSE_MS / 60000);
-    Serial.println(" minutes.");
-    failedOpensInARow = 0;
-    failedClosesInARow = 0;
-    delay(FAILURE_PAUSE_MS);
-  }
+  Serial.print("Too many failed moves in a row. Pausing for ");
+  Serial.print(FAILURE_PAUSE_MS / 60000);
+  Serial.println(" minutes.");
+  failedOpensInARow = 0;
+  failedClosesInARow = 0;
+  delay(FAILURE_PAUSE_MS);
 }
 
 // ===== MOTOR AND SWITCHES =====
 
-// Runs the motor until the switch closes, or gives up after MOTOR_TIMEOUT_MS.
-// Returns true if the door reached the switch.
+// Runs the motor until the switch has stayed closed for SWITCH_CONFIRM_MS, or
+// gives up after MOTOR_TIMEOUT_MS. Returns true if the door reached the switch.
 bool runMotorUntilSwitch(int direction, int switchPin) {
   startMotor(direction);
   unsigned long startMs = millis();
-  while (!isSwitchClosed(switchPin)) {
-    if (millis() - startMs >= MOTOR_TIMEOUT_MS) {
+  unsigned long lastPrintMs = startMs;
+  unsigned long closedSinceMs = 0;
+  bool switchClosed = false;
+  unsigned long blips = 0;  // times the switch closed briefly and opened again
+
+  while (true) {
+    unsigned long nowMs = millis();
+
+    if (isSwitchClosed(switchPin)) {
+      if (!switchClosed) {
+        switchClosed = true;
+        closedSinceMs = nowMs;
+      }
+      if (nowMs - closedSinceMs >= SWITCH_CONFIRM_MS) {
+        stopMotor();
+        printMotorStopped("switch reached", nowMs - startMs, blips);
+        return true;
+      }
+    } else if (switchClosed) {
+      switchClosed = false;
+      blips++;
+    }
+
+    if (nowMs - startMs >= MOTOR_TIMEOUT_MS) {
       stopMotor();
+      printMotorStopped("timed out", nowMs - startMs, blips);
       return false;
     }
+
+    if (nowMs - lastPrintMs >= MOTOR_PRINT_INTERVAL_MS) {
+      lastPrintMs = nowMs;
+      printMotorRunning(nowMs - startMs, blips);
+    }
   }
-  stopMotor();
-  return true;
 }
 
 void startMotor(int direction) {
   digitalWrite(MOTOR_IN1_PIN, direction == MOTOR_UP ? HIGH : LOW);
   digitalWrite(MOTOR_IN2_PIN, direction == MOTOR_DOWN ? HIGH : LOW);
   analogWrite(MOTOR_PWM_PIN, MOTOR_POWER);
+  Serial.println(direction == MOTOR_UP ? "  motor on, running up" : "  motor on, running down");
 }
 
 // Both inputs LOW makes the driver brake the motor.
@@ -189,7 +237,7 @@ bool isDoorFullyClosed() {
 
 // ===== SERIAL MONITOR =====
 
-// One line per reading, for example: "Light 652 | bright 3, dark 0 of 4 | door closed"
+// One line per reading, for example: "Light 652 | bright 2, dark 0 of 3 | door closed"
 void printStatus() {
   Serial.print("Light ");
   Serial.print(lightReading);
@@ -208,4 +256,34 @@ const char* doorPositionText() {
   if (isDoorFullyOpen()) return "open";
   if (isDoorFullyClosed()) return "closed";
   return "partly open";
+}
+
+// While the motor runs, for example: "  motor running 1250 ms | at top: no | at bottom: no"
+void printMotorRunning(unsigned long elapsedMs, unsigned long blips) {
+  Serial.print("  motor running ");
+  Serial.print(elapsedMs);
+  Serial.print(" ms | at top: ");
+  Serial.print(isDoorFullyOpen() ? "yes" : "no");
+  Serial.print(" | at bottom: ");
+  Serial.print(isDoorFullyClosed() ? "yes" : "no");
+  printBlips(blips);
+  Serial.println();
+}
+
+// For example: "  motor stopped after 9850 ms (switch reached)"
+void printMotorStopped(const char* reason, unsigned long elapsedMs, unsigned long blips) {
+  Serial.print("  motor stopped after ");
+  Serial.print(elapsedMs);
+  Serial.print(" ms (");
+  Serial.print(reason);
+  Serial.print(")");
+  printBlips(blips);
+  Serial.println();
+}
+
+// Switch blips are short bursts of electrical noise that were ignored.
+void printBlips(unsigned long blips) {
+  if (blips == 0) return;
+  Serial.print(" | switch blips ignored: ");
+  Serial.print(blips);
 }
