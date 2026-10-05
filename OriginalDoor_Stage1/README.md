@@ -4,7 +4,7 @@ A refactored version of `coopDoor2024v1.ino` (on the `history` branch), for the 
 
 ## Changing when the door opens and closes
 
-The two light levels are at the top of `ChickenCoopDoor_OneSensor.ino`:
+The two light levels are at the top of `OriginalDoor_Stage1.ino`:
 
 ```cpp
 const int BRIGHT_ENOUGH_TO_OPEN = 700;  // open when readings are at or below this
