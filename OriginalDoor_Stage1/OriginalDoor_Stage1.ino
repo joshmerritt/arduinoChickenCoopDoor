@@ -24,16 +24,16 @@
 // dusk and note the reading when you'd want the door to move.
 //   Past "open" values:  300, 420 (6/21/23), 400 (7/2), 600 (10/19), 700
 //   Past "close" values: 600, 900 (6/21/23), 700 (7/2), 820 (10/19), 880
-const int BRIGHT_ENOUGH_TO_OPEN = 700;  // open when readings are at or below this
-const int DARK_ENOUGH_TO_CLOSE = 880;   // close when readings are at or above this
+const int BRIGHT_ENOUGH_TO_OPEN = 830;  // open when readings are at or below this
+const int DARK_ENOUGH_TO_CLOSE = 900;   // close when readings are at or above this
 
 // The light must be past a level for this many readings in a row. Then the
 // door waits one more reading and checks the light and door again before it
 // starts the motor.
 const int READINGS_IN_A_ROW = 3;
-const unsigned long READING_INTERVAL_MS = 5000;  // time between readings (5 seconds)
+const unsigned long READING_INTERVAL_MS = 15000;  // time between readings (5 seconds)
 
-const int MOTOR_POWER = 50;                    // motor speed, 0-255
+const int MOTOR_POWER = 90;                    // motor speed, 0-255
 const unsigned long MOTOR_TIMEOUT_MS = 17000;  // stop if the switch isn't reached in 17 seconds
 
 // A limit switch must read closed for this long before the motor stops. This
@@ -43,7 +43,7 @@ const unsigned long SWITCH_CONFIRM_MS = 50;
 // When closing, keep the motor running this long after the bottom switch is
 // reached, so the door settles fully shut. Adjust it in small steps (50-100):
 // too much lets out extra cord, which can start winding onto the spool backwards.
-const unsigned long EXTRA_CLOSE_MS = 200;
+const unsigned long EXTRA_CLOSE_MS = 500;
 
 // While the motor runs, print its progress to the Serial Monitor this often.
 const unsigned long MOTOR_PRINT_INTERVAL_MS = 250;
@@ -156,6 +156,7 @@ void openDoor() {
 
 void closeDoor() {
   Serial.println("Closing door");
+  delay(2000000);
   if (runMotorUntilSwitch(closeDirection, BOTTOM_SWITCH_PIN, EXTRA_CLOSE_MS)) {
     Serial.println("Door closed");
     failedClosesInARow = 0;
