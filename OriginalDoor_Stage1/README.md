@@ -7,16 +7,20 @@ A refactored version of `coopDoor2024v1.ino` (on the `history` branch), for the 
 The two light levels are at the top of `OriginalDoor_Stage1.ino`:
 
 ```cpp
-const int BRIGHT_ENOUGH_TO_OPEN = 700;  // open when readings are at or below this
-const int DARK_ENOUGH_TO_CLOSE = 880;   // close when readings are at or above this
+const int BRIGHT_ENOUGH_TO_OPEN = 830;  // open when readings are at or below this
+const int DARK_ENOUGH_TO_CLOSE = 900;   // close when readings are at or above this
+
+const unsigned long CLOSE_DELAY_MS = 15UL * 60 * 1000;  // 15 minutes
 ```
 
 **Lower readings mean brighter.**
 
+Once it's dark enough to close, the door waits `CLOSE_DELAY_MS` (15 minutes) before closing, so late chickens can get in. To wait a different number of minutes, change the `15`. For no wait at all, set it to `0`.
+
 To find good values:
 
 1. Around dawn or dusk, plug the Uno into your laptop.
-2. Open **Tools > Serial Monitor** at **9600 baud**. Every 5 seconds it prints a line like:
+2. Open **Tools > Serial Monitor** at **9600 baud**. Every 15 seconds it prints a line like:
 
    ```text
    Light 652 | bright 2, dark 0 of 3 | door closed
@@ -33,27 +37,34 @@ The other settings are in the same block:
 | Setting | Value | What it controls |
 |---|---|---|
 | `READINGS_IN_A_ROW` | 3 | Readings in a row that must be past a level. After that, it waits one more reading and checks again before the motor starts. |
-| `READING_INTERVAL_MS` | 5000 | Time between readings (5 seconds) |
-| `MOTOR_POWER` | 50 | Motor speed (0–255) |
+| `READING_INTERVAL_MS` | 15000 | Time between readings (15 seconds) |
+| `MOTOR_POWER` | 90 | Motor speed (0–255) |
 | `MOTOR_TIMEOUT_MS` | 17000 | How long the motor runs before giving up if it doesn't reach a switch (17 seconds) |
 | `SWITCH_CONFIRM_MS` | 50 | How long a limit switch must read closed before the motor stops. Shorter blips of electrical noise are ignored. |
-| `EXTRA_CLOSE_MS` | 200 | When closing, how much longer the motor keeps running after the bottom switch, so the door settles fully shut. Change it in steps of 50–100. Too much lets out extra cord, which can start winding onto the spool backwards. |
+| `EXTRA_CLOSE_MS` | 500 | When closing, how much longer the motor keeps running after the bottom switch, so the door settles fully shut. Change it in steps of 50–100. Too much lets out extra cord, which can start winding onto the spool backwards. |
 | `MOTOR_PRINT_INTERVAL_MS` | 250 | How often the Serial Monitor shows the motor's progress while it runs |
 | `FAILED_MOVES_BEFORE_PAUSE` | 4 | Failed tries in a row before it pauses |
 | `FAILURE_PAUSE_MS` | 17 minutes | How long it pauses |
 
 ## What it does
 
-- **Reading the light:** it reads the light sensor every 5 seconds.
-- **Opening and closing:** after 3 bright readings in a row, it waits 5 more seconds and checks the light and the door again. If both still agree, it opens the door. Closing works the same way with dark readings.
+- **Reading the light:** it reads the light sensor every 15 seconds.
+- **Opening:** after 3 bright readings in a row, it waits one more reading and checks the light and the door again. If both still agree, it opens the door.
+- **Closing:** it works the same way, but it only closes once it has stayed dark enough for 15 minutes. Any brighter reading starts the 15 minutes over, so a passing storm cloud during the day won't shut the chickens in. After a power cut at night, it also waits the 15 minutes.
 - **Partly open door:** it's opened if it's bright, or closed if it's dark.
-- **Stopping the motor:** the motor runs until the door reaches the top or bottom switch. If the door doesn't get there within 17 seconds, it stops anyway. A switch has to read closed for 50 ms in a row, so a brief burst of electrical noise from the motor can't stop it early. When closing, the motor then runs another 200 ms so the door settles fully shut.
+- **Stopping the motor:** the motor runs until the door reaches the top or bottom switch. If the door doesn't get there within 17 seconds, it stops anyway. A switch has to read closed for 50 ms in a row, so a brief burst of electrical noise from the motor can't stop it early. When closing, the motor then runs another 500 ms so the door settles fully shut.
 - **Failed close:** if a close fails, the next try runs the motor the opposite way. This frees the door if the cord has wound onto the spool backwards.
-- **Repeated failures:** after 4 failed opens (or closes) in a row, it waits 17 minutes before trying again. Between failed tries there's a break of about 10 seconds, the same as before.
+- **Repeated failures:** after 4 failed opens (or closes) in a row, it waits 17 minutes before trying again. Between failed tries there's a break of two readings (about 30 seconds). The close delay doesn't start over for retries.
 
 ## Serial Monitor
 
-At 9600 baud you'll see one line per light reading. Whenever the door moves, you'll also see:
+At 9600 baud you'll see one line per light reading. While it's waiting to close, the line shows a countdown:
+
+```text
+Light 950 | bright 0, dark 3 of 3 | door open | closing in 8 min
+```
+
+Whenever the door moves, you'll also see:
 
 ```text
 Dark and the door isn't closed. Checking again before closing.
@@ -63,8 +74,8 @@ Closing door
   motor running 250 ms | at top: yes | at bottom: no
   motor running 500 ms | at top: no | at bottom: no
   ...
-  switch reached, running 200 ms more
-  motor stopped after 10050 ms (switch reached)
+  switch reached, running 500 ms more
+  motor stopped after 6050 ms (switch reached)
 Door closed
 ```
 

@@ -27,11 +27,15 @@
 const int BRIGHT_ENOUGH_TO_OPEN = 830;  // open when readings are at or below this
 const int DARK_ENOUGH_TO_CLOSE = 900;   // close when readings are at or above this
 
+// Once it's dark enough to close, wait this long before closing so late
+// chickens can get in. A brighter reading in between starts the wait over.
+const unsigned long CLOSE_DELAY_MS = 15UL * 60 * 1000;  // 15 minutes
+
 // The light must be past a level for this many readings in a row. Then the
 // door waits one more reading and checks the light and door again before it
 // starts the motor.
 const int READINGS_IN_A_ROW = 3;
-const unsigned long READING_INTERVAL_MS = 15000;  // time between readings (5 seconds)
+const unsigned long READING_INTERVAL_MS = 15000;  // time between readings (15 seconds)
 
 const int MOTOR_POWER = 90;                    // motor speed, 0-255
 const unsigned long MOTOR_TIMEOUT_MS = 17000;  // stop if the switch isn't reached in 17 seconds
@@ -70,6 +74,7 @@ const int MOTOR_DOWN = 2;
 int lightReading = 0;
 int brightReadingsInARow = 0;
 int darkReadingsInARow = 0;
+unsigned long darkSinceMs = 0;  // when the current run of dark readings started
 int failedOpensInARow = 0;
 int failedClosesInARow = 0;
 
@@ -120,7 +125,12 @@ bool shouldOpen() {
 }
 
 bool shouldClose() {
-  return darkReadingsInARow >= READINGS_IN_A_ROW && !isDoorFullyClosed();
+  return darkReadingsInARow >= READINGS_IN_A_ROW && darkLongEnough() && !isDoorFullyClosed();
+}
+
+// True once it has been dark enough to close for CLOSE_DELAY_MS.
+bool darkLongEnough() {
+  return millis() - darkSinceMs >= CLOSE_DELAY_MS;
 }
 
 // ===== LIGHT SENSOR =====
@@ -130,6 +140,7 @@ void readLightSensor() {
   lightReading = analogRead(LIGHT_SENSOR_PIN);
   brightReadingsInARow = countInARow(brightReadingsInARow, lightReading <= BRIGHT_ENOUGH_TO_OPEN);
   darkReadingsInARow = countInARow(darkReadingsInARow, lightReading >= DARK_ENOUGH_TO_CLOSE);
+  if (darkReadingsInARow == 1) darkSinceMs = millis();  // a new run of dark readings starts the close delay
   printStatus();
 }
 
@@ -156,7 +167,6 @@ void openDoor() {
 
 void closeDoor() {
   Serial.println("Closing door");
-  delay(2000000);
   if (runMotorUntilSwitch(closeDirection, BOTTOM_SWITCH_PIN, EXTRA_CLOSE_MS)) {
     Serial.println("Door closed");
     failedClosesInARow = 0;
@@ -292,7 +302,13 @@ void printStatus() {
   Serial.print(" of ");
   Serial.print(READINGS_IN_A_ROW);
   Serial.print(" | door ");
-  Serial.println(doorPositionText());
+  Serial.print(doorPositionText());
+  if (darkReadingsInARow >= READINGS_IN_A_ROW && !darkLongEnough() && !isDoorFullyClosed()) {
+    Serial.print(" | closing in ");
+    Serial.print((CLOSE_DELAY_MS - (millis() - darkSinceMs)) / 60000 + 1);
+    Serial.print(" min");
+  }
+  Serial.println();
 }
 
 const char* doorPositionText() {
