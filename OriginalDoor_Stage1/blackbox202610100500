@@ -1,0 +1,90 @@
+
+=== Black box: last 85 events, oldest first ===
+RESTART #12 | supply 5.13 V
+RESTART #13 | supply 3.92 V
+RESTART #14 | supply 3.92 V
+  21 s after restart: OPEN started, motor up | supply 3.92 V | light 628 | at top: no | at bottom: yes
+  26 s after restart: stopped after 5105 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  162 s after restart: CLOSE started, motor down | supply 3.92 V | light 1005 | at top: yes | at bottom: no
+  166 s after restart: stopped after 4181 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 1 | at top: no | at bottom: yes
+  331 s after restart: OPEN started, motor up | supply 3.92 V | light 612 | at top: no | at bottom: yes
+  336 s after restart: stopped after 5404 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  406 s after restart: CLOSE started, motor down | supply 3.92 V | light 1013 | at top: yes | at bottom: no
+  411 s after restart: stopped after 4315 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 1 | at top: no | at bottom: yes
+RESTART #15 | supply 3.92 V
+  22 s after restart: CLOSE started, motor down | supply 3.92 V | light 933 | at top: no | at bottom: no
+RESTART #16 | supply 3.92 V
+  22 s after restart: CLOSE started, motor down | supply 3.92 V | light 937 | at top: no | at bottom: no
+  23 s after restart: stopped after 672 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 0 | at top: no | at bottom: yes
+  88 s after restart: OPEN started, motor up | supply 3.92 V | light 573 | at top: no | at bottom: yes
+  93 s after restart: stopped after 5034 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  113 s after restart: CLOSE started, motor down | supply 3.92 V | light 934 | at top: yes | at bottom: no
+  117 s after restart: stopped after 3864 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 2 | at top: no | at bottom: yes
+  128 s after restart: CLOSE started, motor down | supply 3.92 V | light 924 | at top: no | at bottom: no
+  128 s after restart: stopped after 676 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 0 | at top: no | at bottom: yes
+RESTART #17 | supply 5.11 V
+RESTART #18 | supply 5.11 V
+RESTART #19 | supply 5.13 V
+RESTART #20 | supply 5.13 V
+  24 s after restart: OPEN started, motor up | supply 5.11 V | light 769 | at top: no | at bottom: yes
+RESTART #21 | supply 3.92 V
+  24 s after restart: OPEN started, motor up | supply 3.90 V | light 797 | at top: no | at bottom: yes
+  28 s after restart: stopped after 4639 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  94 s after restart: CLOSE started, motor down | supply 3.92 V | light 1023 | at top: yes | at bottom: no
+  97 s after restart: stopped after 3565 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 3 | at top: no | at bottom: yes
+  127 s after restart: OPEN started, motor up | supply 3.92 V | light 714 | at top: no | at bottom: yes
+  131 s after restart: stopped after 4058 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  3527 s after restart: CLOSE started, motor down | supply 3.92 V | light 981 | at top: yes | at bottom: no
+  3531 s after restart: stopped after 3730 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 2 | at top: no | at bottom: yes
+RESTART #22 | supply 5.16 V
+  25 s after restart: OPEN started, motor up | supply 5.13 V | light 782 | at top: no | at bottom: yes
+RESTART #23 | supply 5.13 V
+RESTART #24 | supply 5.13 V
+RESTART #25 | supply 5.09 V
+RESTART #26 | supply 3.89 V
+  25 s after restart: OPEN started, motor up | supply 3.89 V | light 804 | at top: no | at bottom: yes
+  34 s after restart: stopped after 8725 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  2284 s after restart: OPEN started, motor up | supply 3.89 V | light 669 | at top: no | at bottom: no
+  2285 s after restart: stopped after 132 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  40532 s after restart: CLOSE started, motor down | supply 3.92 V | light 982 | at top: yes | at bottom: no
+  40537 s after restart: stopped after 4569 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 1 | at top: no | at bottom: yes
+  65535 s after restart: OPEN started, motor up | supply 3.89 V | light 850 | at top: no | at bottom: yes
+  65535 s after restart: stopped after 8268 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.89 V | light 845 | at top: no | at bottom: no
+  65535 s after restart: stopped after 96 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.90 V | light 554 | at top: no | at bottom: no
+  65535 s after restart: stopped after 84 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.92 V | light 553 | at top: no | at bottom: no
+  65535 s after restart: stopped after 86 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: CLOSE started, motor down | supply 3.92 V | light 983 | at top: yes | at bottom: no
+  65535 s after restart: stopped after 4719 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 1 | at top: no | at bottom: yes
+  65535 s after restart: OPEN started, motor up | supply 3.90 V | light 848 | at top: no | at bottom: yes
+  65535 s after restart: stopped after 8281 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.89 V | light 846 | at top: no | at bottom: no
+  65535 s after restart: stopped after 149 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.90 V | light 548 | at top: no | at bottom: no
+  65535 s after restart: stopped after 84 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: CLOSE started, motor down | supply 3.92 V | light 981 | at top: yes | at bottom: no
+  65535 s after restart: stopped after 4726 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 6 | at top: no | at bottom: yes
+  65535 s after restart: OPEN started, motor up | supply 3.89 V | light 849 | at top: no | at bottom: yes
+  65535 s after restart: stopped after 8970 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.89 V | light 846 | at top: no | at bottom: no
+  65535 s after restart: stopped after 108 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.90 V | light 553 | at top: no | at bottom: no
+  65535 s after restart: stopped after 86 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: OPEN started, motor up | supply 3.90 V | light 547 | at top: no | at bottom: no
+  65535 s after restart: stopped after 88 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 0 | at top: yes | at bottom: no
+  65535 s after restart: CLOSE started, motor down | supply 3.92 V | light 1005 | at top: yes | at bottom: no
+  65535 s after restart: stopped after 4858 ms (switch reached) | lowest supply 3.88 V | switch blips ignored: 3 | at top: no | at bottom: yes
+RESTART #27 | supply 5.04 V
+RESTART #28 | supply 3.92 V
+  398 s after restart: OPEN started, motor up | supply 3.92 V | light 189 | at top: no | at bottom: yes
+  403 s after restart: stopped after 4936 ms (switch reached) | lowest supply 3.89 V | switch blips ignored: 0 | at top: yes | at bottom: no
+RESTART #29 | supply 5.13 V
+RESTART #30 | supply 5.11 V
+RESTART #31 | supply 3.89 V
+  2069 s after restart: CLOSE started, motor down | supply 3.89 V | light 1023 | at top: no | at bottom: no
+  2075 s after restart: stopped after 6725 ms (switch reached) | lowest supply 3.86 V | switch blips ignored: 5 | at top: no | at bottom: yes
+=== End of black box ===
+
+Coop door starting. Opens at 830 or lower, closes at 900 or higher.
